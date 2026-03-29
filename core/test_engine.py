@@ -1,31 +1,40 @@
-from engine import BakolEngine
+import pytest
+from engine import Bakol
 
-def test_bakol_precision():
-    engine = BakolEngine()
+@pytest.fixture
+def b():
+    return Bakol()
 
-    # Sequence 1: Mostly minor chords (Gm, Dm, Cm) 
-    # With 6-chord logic, this should now pull toward A# 
-    # because Gm, Dm, Cm, D# are all in the A# family.
-    prog1 = ['Gm', 'Dm', 'Gm', 'Dm', 'D#', 'Cm', 'D']
-    tonic1 = engine.identify_tonic(prog1)
-    print(f"Sequence 1 Tonic: {tonic1}") 
-    # Note: 'D' (Major) is technically outside A# major, but the 
-    # other 4 chords will force the A# result.
-    
-    # Sequence 2: Standard A# Major
-    prog2 = ['D#', 'F', 'A#', 'Gm']
-    tonic2 = engine.identify_tonic(prog2)
-    print(f"Sequence 2 Tonic: {tonic2}")
+@pytest.mark.parametrize("input_note, expected_id", [
+    ("C", 0),
+    ("C#", 1),
+    ("Db", 1),
+    ("Eb", 3),
+    ("F#", 6),
+    ("Gb", 6),
+    ("B", 11),
+    ("Cb", 11),
+])
+def test_get_id(b, input_note, expected_id):
+    assert b.get_id(input_note) == expected_id
 
-    assert tonic1 == 'A#'
-    assert tonic2 == 'A#'
-    
-    # Final Normalization Test
-    normalized = engine.normalize_to_tonic(prog1, target_tonic='C')
-    print(f"Normalized Sequence 1: {normalized}")
-    # Expected: Gm -> Am, Dm -> Em, D# -> F, Cm -> Dm
-    
-    print("✅ Logic successfully unified both sequences under A#!")
+@pytest.mark.parametrize("chords, expected_tonic", [
+    (['A#', 'Gm', 'D#', 'F', 'Cm'], 'A#'),
+    (['C', 'F', 'G', 'Am'], 'C'),
+    (['G', 'C', 'D', 'Em'], 'G'),
+    (['Gm', 'Dm', 'Gm', 'Dm', 'D#', 'Cm', 'D'], 'A#'),
+    (['D#', 'F', 'A#', 'Gm'], 'A#'),
+])
+def test_identify_tonic(b, chords, expected_tonic):
+    assert b.identify_tonic(chords) == expected_tonic
 
-if __name__ == "__main__":
-    test_bakol_precision()
+@pytest.mark.parametrize("chords, target, expected", [
+    (['A#', 'Gm', 'D#', 'F'], 'C', ['C', 'Am', 'F', 'G']),
+    (['D', 'A', 'Bm', 'G'], 'C', ['C', 'G', 'Am', 'F']),
+])
+def test_transpose_to_tonic(b, chords, target, expected):
+    assert b.transpose_to_tonic(chords, target) == expected
+
+def test_invalid_chord(b):
+    with pytest.raises(ValueError):
+        b.parse_chord("X#")
