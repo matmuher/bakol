@@ -4,23 +4,19 @@ class Bakol:
     CHROMATIC = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
     SEMITONES = len(CHROMATIC)
     
-    # Offsets and expected qualities for the 6 diatonic neighbors
-    # Key: semitone offset from tonic, Value: 'm' for minor or '' for major
-    DIATONIC_FAMILY = {
-        0: '',  # I
-        2: 'm', # ii
-        4: 'm', # iii
-        5: '',  # IV
-        7: '',  # V
-        9: 'm'  # vi
+    # The "Recipe" for building chords
+    CHORD_OFFSETS = {
+        '': [0, 4, 7],  # Major
+        'm': [0, 3, 7]  # Minor
     }
+
+    DIATONIC_FAMILY = {0: '', 2: 'm', 4: 'm', 5: '', 7: '', 9: 'm'}
     
     def __init__(self):
         self.letter_map = {name: i for i, name in enumerate(self.CHROMATIC) if len(name) == 1}
 
     def get_id(self, note_str):
         note = note_str.strip().capitalize()
-        
         if note in self.CHROMATIC:
             return self.CHROMATIC.index(note)
         
@@ -39,13 +35,11 @@ class Bakol:
         
         root_str, quality_str = match.groups()
         root_id = self.get_id(root_str)
-        
         is_minor = 'm' in quality_str.lower() and 'maj' not in quality_str.lower()
         return root_id, ('m' if is_minor else '')
 
     def identify_tonic(self, chord_names):
         parsed = [self.parse_chord(n) for n in chord_names]
-        
         scores = []
         for t in range(self.SEMITONES):
             score = sum(
@@ -54,7 +48,6 @@ class Bakol:
                 and self.DIATONIC_FAMILY[(r_id - t) % self.SEMITONES] == q
             )
             scores.append(score)
-        
         return self.CHROMATIC[scores.index(max(scores))]
 
     def transpose_to_tonic(self, chord_names, target_tonic='C'):
