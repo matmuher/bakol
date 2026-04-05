@@ -1,36 +1,29 @@
 import sys
+import argparse
 from core.engine import Bakol
 from core.listener import Listener
 
 def main():
-    if len(sys.argv) < 2:
-        print("Usage: python bakol.py <path_to_audio_file>")
-        return
-
-    audio_path = sys.argv[1]
+    parser = argparse.ArgumentParser(description="Bakol AI: Music Chord Analysis")
+    parser.add_argument("file", help="Path to audio file")
+    parser.add_argument("--seconds", type=int, default=30)
+    parser.add_argument("--window", type=float, default=1.0, help="Grid size in seconds")
     
-    # Initialize Engine
+    args = parser.parse_args()
+    
     bakol = Bakol()
     listener = Listener(bakol)
     
-    print(f"--- Analyzing first 30s of: {audio_path} ---")
+    print(f"--- Analyzing: {args.file} ({args.seconds}s) ---")
     
     try:
-        timeline = listener.analyze_file(audio_path, max_seconds=30)
-        
-        # Basic Visualization
-        for segment in timeline:
-            start = segment['start']
-            end = segment['end']
-            chord = segment['chord']
-            
-            # Create a simple visual bar based on duration
-            duration = end - start
+        timeline = listener.analyze_file(args.file, max_seconds=args.seconds, window_size=args.window)
+        for seg in timeline:
+            duration = seg['end'] - seg['start']
             bar = "=" * int(duration * 2)
-            print(f"[{start:05.2f}s - {end:05.2f}s] {chord:<5} |{bar}")
-            
+            print(f"[{seg['start']:05.2f}s - {seg['end']:05.2f}s] {seg['chord']:<5} |{bar}")
     except Exception as e:
-        print(f"Error processing file: {e}")
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
     main()
