@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bakol AI Web</title>
+    <style>
+        .chord-line { cursor: pointer; padding: 5px; border-bottom: 1px solid #eee; }
+        .chord-line:hover { background: #f0f0f0; }
+        .timestamp { color: #888; font-family: monospace; margin-right: 10px; }
+        .chord-name { font-weight: bold; font-size: 1.2em; color: #2c3e50; }
+    </style>
+</head>
+<body>
+    <h1>Bakol Chord Analyzer</h1>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="file" name="track" accept="audio/*">
+        <button type="submit">Analyze</button>
+    </form>
+
+    <hr>
+
+    {% if file_url %}
+        <audio id="player" controls src="{{ file_url }}" style="width: 100%"></audio>
+        
+        <h3>Detected Chords:</h3>
+        <div id="chord-list">
+            {% for item in chords %}
+                <div class="chord-line" onclick="seekTo({{ item.start }})">
+                    <span class="timestamp">{{ item.start }}s - {{ item.end }}s</span>
+                    <span class="chord-name">{{ item.chord }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <script>
+        function seekTo(seconds) {
+            const player = document.getElementById('player');
+            player.currentTime = seconds;
+            player.play();
+        }
+    </script>
+</body>
+</html>
