@@ -2,29 +2,52 @@ import librosa
 import numpy as np
 import warnings
 
-# Suppress system-level deprecation noise
 warnings.filterwarnings("ignore", category=DeprecationWarning, module="audioread")
 
 class Listener:
     def __init__(self, bakol):
         self.bakol = bakol
 
-    def analyze_file(self, file_path, num_chords):
-            y, sr = librosa.load(file_path)
+    def get_fixed_windows(self, duration, window_size=0.1):
+        """Creates a list of (start, end) timestamps."""
+        return [(i, i + window_size) for i in np.arange(0, duration, window_size)]
+
+    def analyze_file(self, file_path, max_seconds=30):
+        # 1. Load only the first N seconds
+        y, sr = librosa.load(file_path, duration=max_seconds)
+        
+        # 2. Compute Chromagram
+        # We use a finer hop_length to get better time resolution
+        chroma = librosa.feature.chroma_cqt(y=y, sr=sr, hop_length=512)
+        
+        # Calculate time per chroma column (frame)
+        times = librosa.frames_to_time(np.arange(chroma.shape[1]), sr=sr, hop_length=512)
+        
+        # 3. Define Windows (Fixed Grid for now)
+        total_duration = librosa.get_duration(y=y, sr=sr)
+        windows = self.get_fixed_windows(total_duration, window_size=1.0)
+        
+        results = []
+        for start, end in windows:
+            # Find the indices in the chroma matrix that correspond to this time window
+            idx = np.where((times >= start) & (times < end))[0]
+            if len(idx) == 0:
+                continue
+                
+            # Average the chroma across the window
+            segment_chroma = np.mean(chroma[:, idx], axis=1)
+            chord = self._detect_chord(segment_chroma)
             
-            # Use n_chroma=12 (default) to get our 12 semitone bins.
-            # We remove n_bins and bins_per_octave as they were redundant/incorrect.
-            chroma = librosa.feature.chroma_cqt(
-                y=y, 
-                sr=sr, 
-                hop_length=256,
-                n_chroma=self.bakol.SEMITONES
-            )
+            results.append({
+                "start": round(start, 2),
+                "end": round(end, 2),
+                "chord": chord
+            })
             
-            segments = np.array_split(chroma, num_chords, axis=1)
-            return [self._detect_chord(np.mean(seg, axis=1)) for seg in segments]
+        return self._merge_adjacent(results)
 
     def _detect_chord(self, chroma_vector):
+        """Uses dot product against Bakol templates (unchanged logic)."""
         best_chord = ""
         max_similarity = -1
         
@@ -44,5 +67,22 @@ class Listener:
                     max_similarity = similarity
                     root = self.bakol.CHROMATIC[i]
                     best_chord = f"{root}{quality}"
-        
         return best_chord
+
+    def _merge_adjacent(self, results):
+        """Combines consecutive identical chords into single blocks."""
+        if not results:
+            return []
+            
+        merged = []
+        current = results[0].copy()
+        
+        for next_res in results[1:]:
+            if next_res['chord'] == current['chord']:
+                current['end'] = next_res['end']
+            else:
+                merged.append(current)
+                current = next_res.copy()
+        
+        merged.append(current)
+        return merged
