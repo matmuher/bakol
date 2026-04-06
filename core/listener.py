@@ -63,6 +63,31 @@ class Listener:
 
         return final_timeline
 
+    def get_diatonic_options(self, full_chords):
+        """
+        Uses Bakol's logic to find the tonic and returns the 
+        standard 6-chord diatonic family for that key.
+        """
+        if not full_chords:
+            return []
+            
+        # 1. Extract chord names from the timeline
+        chord_names = [c['chord'] for c in full_chords if c['chord'] != 'N/A']
+        if not chord_names:
+            return []
+            
+        # 2. Use Bakol's routine to find the most likely tonic
+        tonic_name = self.bakol.identify_tonic(chord_names)
+        tonic_id = self.bakol.CHROMATIC.index(tonic_name)
+        
+        # 3. Build the 6-chord family based on DIATONIC_FAMILY (I, ii, iii, IV, V, vi)
+        options = []
+        for offset, quality in self.bakol.DIATONIC_FAMILY.items():
+            root = self.bakol.CHROMATIC[(tonic_id + offset) % self.bakol.SEMITONES]
+            options.append(f"{root}{quality}")
+            
+        return options
+
     def get_core_progression(self, full_chords, top_n=4):
         """Identifies the top N most frequent chords in order of first appearance."""
         if not full_chords: return []
