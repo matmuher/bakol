@@ -2,3 +2,4 @@ bakol_site/media
 venv
 __pycache__
 db.sqlite3
+assets
