@@ -9,11 +9,8 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
 
         body { 
-            background-color: #0f1113; 
-            color: white; 
-            font-family: 'Inter', sans-serif; 
-            overflow-x: hidden; 
-            min-height: 100vh;
+            background-color: #0f1113; color: white; font-family: 'Inter', sans-serif; 
+            overflow-x: hidden; min-height: 100vh;
         }
         
         /* 1. Branding */
@@ -27,35 +24,20 @@
         /* 2. The Stage */
         .chord-stage {
             position: relative;
-            height: 180px; 
-            width: 100%;
-            max-width: 800px;
+            height: 180px; width: 100%; max-width: 800px;
             margin: 0 auto 30px auto;
-            background: #16191c;
-            border-radius: 20px;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid #2c3034;
-            cursor: pointer;
+            background: #16191c; border-radius: 20px;
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+            border: 1px solid #2c3034; cursor: pointer;
         }
 
         .placeholder-text {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            color: #555;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            z-index: 5;
-            text-align: center;
-            font-weight: 700;
-            width: 100%;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #555; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px;
+            z-index: 5; text-align: center; font-weight: 700; width: 100%;
         }
 
-        /* 3. The Timeline */
+        /* 3. The Jumpy Conveyor */
         #conveyor {
             display: flex;
             position: absolute;
@@ -63,34 +45,30 @@
             white-space: nowrap;
             height: 100%;
             align-items: center;
+            /* Snap transition: 0.1s creates a "mechanical jump" feel */
+            transition: transform 0.9s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
         .chord-unit {
             position: absolute;
-            width: 220px;
+            width: 250px; /* Fixed distance between chords */
             transform: translateX(-50%);
             text-align: center;
             font-weight: 900;
             line-height: 1;
-            pointer-events: none;
+            transition: all 0.2s ease;
         }
 
-        /* 4. Functional UI */
+        /* 4. Player Styling */
         #file-input { display: none; }
-        
         .loader-overlay { 
-            position: absolute; 
-            z-index: 10; 
-            display: none; 
-            background: rgba(15, 17, 19, 0.9); 
-            width: 100%; height: 100%; 
+            position: absolute; z-index: 10; display: none; 
+            background: rgba(15, 17, 19, 0.9); width: 100%; height: 100%; 
             align-items: center; justify-content: center; 
         }
-
         audio { 
             filter: invert(100%) sepia(100%) saturate(600%) hue-rotate(185deg) brightness(0.85);
-            height: 40px;
-            opacity: 0.9;
+            height: 40px; opacity: 0.9;
         }
     </style>
 </head>
@@ -138,59 +116,58 @@
     const player = document.getElementById('player');
     const conveyor = document.getElementById('conveyor');
     
-    const PIXELS_PER_SECOND = 220; 
-    
-    // Constant Zone Config (seconds)
-    const DEADZONE = 0.25; 
-    const FALLOFF_SPEED = 0.7; 
+    // Fixed distance in pixels between each chord "slot"
+    const SLOT_WIDTH = 250; 
+    let currentIdx = -1;
 
     function autoSubmit() {
         document.getElementById('loader').style.display = 'flex';
         document.getElementById('upload-form').submit();
     }
 
-    function interpolateColor(distance) {
-        if (distance < DEADZONE) return `rgb(13, 110, 253)`;
-        const adjustedDist = distance - DEADZONE;
-        const factor = Math.max(0, 1 - (adjustedDist / FALLOFF_SPEED)); 
-        const r = Math.round(80 + (13 - 80) * factor);
-        const g = Math.round(80 + (110 - 80) * factor);
-        const b = Math.round(80 + (253 - 80) * factor);
-        return `rgb(${r}, ${g}, ${b})`;
-    }
-
     function renderFrame() {
         if (!player || !conveyor) return;
 
         const time = player.currentTime;
-        const totalOffset = time * PIXELS_PER_SECOND;
-        conveyor.style.transform = `translateX(-${totalOffset}px)`;
+        
+        // Find which chord index we are currently at
+        const idx = chords.findIndex(c => time >= c.start && time < c.end);
 
-        document.querySelectorAll('.chord-unit').forEach((el) => {
-            const mid = (parseFloat(el.dataset.start) + parseFloat(el.dataset.end)) / 2;
-            const distance = Math.abs(time - mid);
-            
-            el.style.left = `${mid * PIXELS_PER_SECOND}px`;
-
-            let intensity = 1.0;
-            if (distance > DEADZONE) {
-                intensity = Math.max(0, 1 - ((distance - DEADZONE) / FALLOFF_SPEED));
-            }
-
-            el.style.fontSize = (1.5 + (3.0 * intensity)) + "rem";
-            el.style.color = interpolateColor(distance);
-            el.style.opacity = Math.max(0.25, intensity); 
-            
-            // REDUCED GLOW: Max shadow radius cut from 25px to 12px, opacity at 0.2
-            if (distance < DEADZONE + 0.1) {
-                const glowIntensity = distance < DEADZONE ? 1 : 1 - ((distance - DEADZONE) * 10);
-                el.style.textShadow = `0 0 ${12 * glowIntensity}px rgba(13,110,253,0.2)`;
-            } else {
-                el.style.textShadow = 'none';
-            }
-        });
+        if (idx !== -1 && idx !== currentIdx) {
+            currentIdx = idx;
+            updateUI(idx);
+        }
 
         requestAnimationFrame(renderFrame);
+    }
+
+    function updateUI(activeIdx) {
+        // 1. Move the conveyor to the fixed slot position
+        // This makes the active chord sit exactly at 'left: 50%' of the stage
+        const offset = activeIdx * SLOT_WIDTH;
+        conveyor.style.transform = `translateX(-${offset}px)`;
+
+        const chordElements = document.querySelectorAll('.chord-unit');
+        chordElements.forEach((el, i) => {
+            // Position them at fixed intervals
+            el.style.left = `${i * SLOT_WIDTH}px`;
+
+            const distance = Math.abs(i - activeIdx);
+
+            // 2. Center Logic (Plateau)
+            if (distance === 0) {
+                el.style.fontSize = "4.5rem";
+                el.style.color = "#0d6efd";
+                el.style.opacity = "1";
+                el.style.textShadow = "0 0 12px rgba(13,110,253,0.2)";
+            } else {
+                // 3. Side Logic (Dimmed and Smaller)
+                el.style.fontSize = "1.5rem";
+                el.style.color = "#555";
+                el.style.opacity = "0.3";
+                el.style.textShadow = "none";
+            }
+        });
     }
 
     if (player && chords.length > 0) {
