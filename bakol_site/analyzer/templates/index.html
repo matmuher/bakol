@@ -4,209 +4,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>♭akol: train musical ear</title>
-    
+    <title>♭akol</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-
-        :root {
-            --bg-color: #0f1113;
-            --card-bg: #16191c;
-            --primary-blue: #0d6efd;
-            --border-color: #2c3034;
-            --text-muted: #444;
-            --success-green: #28a745;
-            --error-red: #dc3545;
+        /* 75% Brightness Helper Text */
+        .text-muted-75 {
+            color: #bdc3c7 !important; /* Soft Silver */
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
-
-        body { 
-            background-color: var(--bg-color); 
-            color: white; 
-            font-family: 'Inter', sans-serif; 
-            overflow-x: hidden; 
-            min-height: 100vh;
-            padding-bottom: 80px;
-        }
-
-        /* Logo */
-        .logo-container { margin-top: 50px; text-align: center; margin-bottom: 30px; }
-        .logo { font-size: 2.5rem; font-weight: 700; display: inline-flex; align-items: baseline; }
-        .logo .flat { color: var(--primary-blue); font-size: 3.2rem; line-height: 0; }
-
-        /* Chord Stage (Conveyor Belt) */
-        .chord-stage {
-            position: relative; 
-            height: 240px; /* Tall enough for 4.8rem zoom */
-            width: 100%; 
-            max-width: 800px;
-            margin: 0 auto 30px auto; 
-            background: var(--card-bg); 
-            border-radius: 24px;
-            overflow: hidden; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            border: 1px solid var(--border-color); 
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-            pointer-events: none; /* Clicks pass through to the upload wrapper */
-        }
-
-        #conveyor {
-            display: flex; 
-            position: absolute; 
-            left: 50%; 
-            white-space: nowrap;
-            transition: transform 0.9s cubic-bezier(0.23, 1, 0.32, 1);
-            height: 100%;
-            align-items: center;
-            pointer-events: none;
-        }
-
-        .chord-unit {
-            position: absolute; 
-            width: 250px; 
-            left: 0;
-            top: 50%;
-            transform: translate(-50%, -50%); /* Perfect vertical and horizontal centering */
-            text-align: center; 
-            font-weight: 900; 
-            line-height: 1;
-            pointer-events: none;
-        }
-
-        /* Core Progression Area */
-        .core-progression-container {
-            max-width: 550px; 
-            background: var(--card-bg); 
-            border: 1px solid var(--border-color);
-            border-radius: 16px; 
-            padding: 25px; 
-            text-align: center; 
-            margin: 0 auto;
-            position: relative; 
-            z-index: 100;
-            pointer-events: auto;
-        }
-
-        .core-label {
-            font-size: 0.7rem; 
-            color: #666; 
-            font-weight: 800; 
-            letter-spacing: 2px; 
-            margin-bottom: 15px;
-            text-transform: uppercase;
-        }
-
-        .core-values span { 
-            cursor: pointer; 
-            padding: 6px 12px; 
-            font-size: 1.8rem; 
-            font-weight: 900; 
-            border-radius: 8px; 
-            display: inline-block; 
-            transition: all 0.2s;
-        }
-
-        /* Chord Guessing States */
-        .guess-slot { border: 2px dashed #333; color: #333; }
-        .guess-filled { color: #888; border: 2px solid transparent; }
-        .correct { color: var(--success-green) !important; }
-        .wrong { color: var(--error-red) !important; border: none !important; }
-
-        /* Floating Selection Menu */
-        .chord-menu {
-            position: absolute; 
-            background: #1c1f22; 
-            border: 1px solid #444;
-            border-radius: 12px; 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px; 
-            padding: 15px; 
-            z-index: 9999; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-        }
-
-        .menu-item { 
-            padding: 10px; 
-            background: #2c3034; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            font-weight: 800; 
-            text-align: center;
-            transition: background 0.2s;
-        }
-        .menu-item:hover { background: var(--primary-blue); color: white; }
-
-        /* Buttons & Audio */
-        .btn-check-mode { border-radius: 20px; font-weight: 700; padding: 6px 20px; }
         
-        #check-btn {
-            background-color: var(--primary-blue);
-            border: none;
-            border-radius: 10px;
-            font-weight: 700;
-            padding: 10px 25px;
-            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3);
-            transition: transform 0.1s;
+        .sidebar-header {
+            color: #bdc3c7 !important; 
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 1.2px;
+            opacity: 0.9;
         }
-        #check-btn:active { transform: scale(0.98); }
 
-        audio {
-    accent-color: var(--primary-blue); /* Modern CSS property for form elements and media controls */
-}
-        #file-input { display: none; }
-        .d-none { display: none !important; }
+        .add-track-btn {
+            border: 1px dashed #444;
+            color: var(--primary-blue);
+            transition: all 0.2s;
+            border-radius: 10px;
+            text-decoration: none;
+            display: block;
+            background: transparent;
+        }
+        .add-track-btn:hover {
+            background: rgba(13, 110, 253, 0.05);
+            border-color: var(--primary-blue);
+            color: white;
+        }
+
+        /* Stage logic: Clickable only when empty */
+        .upload-trigger {
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
 
-<div class="container text-center">
-    <div class="logo-container">
-        <div class="logo"><span class="flat">♭</span><span class="name">akol</span></div>
+<nav class="navbar navbar-dark bg-black px-4 py-2 border-bottom border-secondary">
+    <div class="logo">
+        <span class="flat" style="color:var(--primary-blue); font-size: 2.5rem; font-weight:700;">♭</span>
+        <span style="font-size: 1.8rem; font-weight:700; color:white;">akol</span>
     </div>
+    <div class="d-flex align-items-center">
+        <span class="me-3 text-muted-75 small">User: <strong>{{ user.username }}</strong></span>
+        <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm fw-bold">EXIT</a>
+    </div>
+</nav>
 
-    <form id="upload-form" method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        <input id="file-input" name="track" type="file" onchange="this.form.submit()"/>
-        <div style="cursor:pointer;" onclick="document.getElementById('file-input').click()">
-            <div class="chord-stage">
-                {% if not chords %}
-                    <div style="color:var(--text-muted); font-weight:700; letter-spacing:1px;">
-                        UPLOAD TRACK TO ANALYZE
-                    </div>
-                {% else %}
-                    <div id="conveyor">
-                        {% for item in chords %}
-                            <div class="chord-unit">{{ item.chord }}</div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-3 bg-black border-end border-secondary py-4" style="min-height: 100vh;">
+            <div class="px-3 mb-4 d-flex justify-content-between align-items-center">
+                <h6 class="text-uppercase sidebar-header mb-0">YOUR TRACKS</h6>
+                <button onclick="document.getElementById('file-input').click()" class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold">+</button>
+            </div>
+
+            <div class="list-group list-group-flush mb-4">
+                {% for f in user_files %}
+                <div class="list-group-item bg-transparent border-0 d-flex justify-content-between align-items-center px-3 mb-1">
+                    <a href="{% url 'index_with_track' f.id %}" class="text-decoration-none text-truncate me-2 {% if f.id == active_id %}text-primary fw-bold{% else %}text-white-50{% endif %}">
+                        {{ f.filename }}
+                    </a>
+                    <form action="{% url 'delete_track' f.id %}" method="post" onsubmit="return confirm('Delete track?')">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-link text-danger p-0" style="text-decoration:none; opacity: 0.7;">&times;</button>
+                    </form>
+                </div>
+                {% empty %}
+                <div class="px-3 small text-muted">No tracks found.</div>
+                {% endfor %}
+            </div>
+
+            <div class="px-3">
+                <div class="add-track-btn p-3 text-center small fw-bold" style="cursor:pointer;" onclick="document.getElementById('file-input').click()">
+                    + LOAD NEW TRACK
+                </div>
             </div>
         </div>
-    </form>
 
-    {% if file_url %}
-        <div class="d-flex justify-content-center gap-3 mb-4">
-            <button id="btn-show" class="btn btn-sm btn-outline-primary btn-check-mode" onclick="setMode('show')">SHOW</button>
-            <button id="btn-guess" class="btn btn-sm btn-primary btn-check-mode" onclick="setMode('guess')">GUESS</button>
-        </div>
+        <div class="col-md-9 py-5 text-center">
+            {% if error %}
+                <div class="alert alert-danger mx-auto mb-4" style="max-width:500px; border-radius: 12px;">{{ error }}</div>
+            {% endif %}
 
-        <div class="mx-auto" style="max-width: 500px;">
-            <audio id="player" controls src="{{ file_url }}" class="w-100 mb-4"></audio>
-        </div>
-        
-        <div class="core-progression-container">
-            <div class="core-label">Core Progression</div>
-            <div id="core-display" class="core-values">
+            <form id="upload-form" method="post" enctype="multipart/form-data" class="mb-4">
+                {% csrf_token %}
+                <input id="file-input" name="track" type="file" onchange="this.form.submit()" style="display:none;"/>
+                
+                <div class="chord-stage mx-auto">
+                    {% if not chords %}
+                        <div class="upload-trigger" onclick="document.getElementById('file-input').click()">
+                            <div class="text-muted-75">CLICK TO UPLOAD MP3</div>
+                        </div>
+                    {% else %}
+                        <div id="conveyor">
+                            {% for item in chords %}
+                                <div class="chord-unit">{{ item.chord }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
                 </div>
-            <button id="check-btn" class="btn btn-primary btn-sm mt-4 d-none" onclick="checkAnswers()">
-                CHECK ANSWERS
-            </button>
+            </form>
+
+            {% if file_url %}
+                <div class="d-flex justify-content-center gap-3 mb-4">
+                    <button id="btn-show" class="btn btn-sm btn-outline-primary btn-check-mode" onclick="setMode('show')">SHOW</button>
+                    <button id="btn-guess" class="btn btn-sm btn-primary btn-check-mode" onclick="setMode('guess')">GUESS</button>
+                </div>
+
+                <div class="mx-auto" style="max-width: 500px;">
+                    <audio id="player" controls src="{{ file_url }}" class="w-100 mb-4"></audio>
+                </div>
+                
+                <div class="core-progression-container">
+                    <div class="core-label text-muted-75">CORE PROGRESSION</div>
+                    <div id="core-display" class="core-values"></div>
+                    <button id="check-btn" class="btn btn-primary btn-sm mt-4 d-none" onclick="checkAnswers()">
+                        CHECK ANSWERS
+                    </button>
+                </div>
+            {% endif %}
         </div>
-    {% endif %}
+    </div>
 </div>
 
 <div id="chord-menu" class="chord-menu d-none">
@@ -223,14 +153,8 @@
     document.addEventListener('DOMContentLoaded', () => {
         const chordsData = JSON.parse(document.getElementById('chords-raw').textContent || "[]");
         const coreData = JSON.parse(document.getElementById('core-raw').textContent || "[]");
-        
-        if (chordsData.length > 0) {
-            // Initialize the analyzer class
-            window.analyzer = new ChordAnalyzer(chordsData, coreData);
-        }
+        if (chordsData.length > 0) window.analyzer = new ChordAnalyzer(chordsData, coreData);
     });
-
-    // Bridge functions for HTML onclick attributes
     function setMode(m) { if(window.analyzer) window.analyzer.setMode(m); }
     function checkAnswers() { if(window.analyzer) window.analyzer.checkAnswers(); }
     function selectChord(c) { if(window.analyzer) window.analyzer.selectChord(c); }
