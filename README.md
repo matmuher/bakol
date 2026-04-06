@@ -2,6 +2,8 @@
 
 Basic accord listener
 
+![alt text](screen.png)
+
 ## What?
 
 Bakol decomposes any song into progression of the same basic chords.
@@ -41,13 +43,24 @@ Bakol helps to normalize song to known collection of chords
 
 2. Check user's input
 
-3. Feedback how close it is
+3. Feedback
 
-## Features 
 
-1. 3 sample melodies that can be analyzed and guessed
+## Build
 
-2. Store person's file for limited time
+```
+    pip install -r requirements.txt
+```
 
-3. Ther shall be person's account with associated melodies
+### CLI
 
+```
+    python cli.py my_fav_song.mp3
+```
+
+### Django
+
+```
+    cd bakol_site
+    python manage.py runserver
+```
