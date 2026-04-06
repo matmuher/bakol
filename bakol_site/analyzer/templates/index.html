@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>&#9837;akol: train musical ear</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
@@ -13,7 +12,6 @@
             overflow-x: hidden; min-height: 100vh;
         }
         
-        /* 1. Branding */
         .logo-container { margin-top: 50px; text-align: center; margin-bottom: 30px; }
         .logo { font-size: 2.5rem; font-weight: 700; display: inline-flex; align-items: baseline; }
         .logo .flat { color: #0d6efd; font-size: 3.2rem; margin-right: -2px; line-height: 0; }
@@ -21,12 +19,9 @@
         .tagline { display: block; color: #666; font-size: 0.95rem; margin-top: 5px; }
         .tagline u { text-decoration-color: #444; }
 
-        /* 2. The Stage */
         .chord-stage {
-            position: relative;
-            height: 180px; width: 100%; max-width: 800px;
-            margin: 0 auto 30px auto;
-            background: #16191c; border-radius: 20px;
+            position: relative; height: 180px; width: 100%; max-width: 800px;
+            margin: 0 auto 30px auto; background: #16191c; border-radius: 20px;
             overflow: hidden; display: flex; align-items: center; justify-content: center;
             border: 1px solid #2c3034; cursor: pointer;
         }
@@ -34,42 +29,31 @@
         .placeholder-text {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             color: #555; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px;
-            z-index: 5; text-align: center; font-weight: 700; width: 100%;
+            font-weight: 700; width: 100%; text-align: center;
         }
 
-        /* 3. The Jumpy Conveyor */
         #conveyor {
-            display: flex;
-            position: absolute;
-            left: 50%; 
-            white-space: nowrap;
-            height: 100%;
-            align-items: center;
-            /* Snap transition: 0.1s creates a "mechanical jump" feel */
+            display: flex; position: absolute; left: 50%; white-space: nowrap;
+            height: 100%; align-items: center;
+            /* 0.9s SNAP TRANSITION */
             transition: transform 0.9s cubic-bezier(0.23, 1, 0.32, 1);
         }
 
         .chord-unit {
-            position: absolute;
-            width: 250px; /* Fixed distance between chords */
-            transform: translateX(-50%);
-            text-align: center;
-            font-weight: 900;
-            line-height: 1;
-            transition: all 0.2s ease;
+            position: absolute; width: 250px; transform: translateX(-50%);
+            text-align: center; font-weight: 900; line-height: 1;
+            /* Fast fade for visuals */
+            transition: font-size 0.4s ease, opacity 0.4s ease, color 0.4s ease, text-shadow 0.4s ease;
+            font-size: 1.5rem; color: #555; opacity: 0.3; /* Initial state */
         }
 
-        /* 4. Player Styling */
         #file-input { display: none; }
         .loader-overlay { 
-            position: absolute; z-index: 10; display: none; 
-            background: rgba(15, 17, 19, 0.9); width: 100%; height: 100%; 
-            align-items: center; justify-content: center; 
+            position: absolute; z-index: 10; display: none; background: rgba(15, 17, 19, 0.9); 
+            width: 100%; height: 100%; align-items: center; justify-content: center; 
         }
-        audio { 
-            filter: invert(100%) sepia(100%) saturate(600%) hue-rotate(185deg) brightness(0.85);
-            height: 40px; opacity: 0.9;
-        }
+        
+        audio { filter: invert(100%) sepia(100%) saturate(600%) hue-rotate(185deg) brightness(0.85); height: 40px; opacity: 0.9; }
     </style>
 </head>
 <body>
@@ -87,7 +71,6 @@
         <input id="file-input" name="track" type="file" onchange="autoSubmit()"/>
         <div class="chord-stage shadow-lg" onclick="document.getElementById('file-input').click()">
             <div id="loader" class="loader-overlay"><div class="spinner-border text-primary"></div></div>
-
             {% if not chords %}
                 <div class="placeholder-text">Click to analyze track</div>
             {% else %}
@@ -115,8 +98,6 @@
     const chords = JSON.parse(document.getElementById('chords-raw').textContent || "[]");
     const player = document.getElementById('player');
     const conveyor = document.getElementById('conveyor');
-    
-    // Fixed distance in pixels between each chord "slot"
     const SLOT_WIDTH = 250; 
     let currentIdx = -1;
 
@@ -125,43 +106,21 @@
         document.getElementById('upload-form').submit();
     }
 
-    function renderFrame() {
-        if (!player || !conveyor) return;
-
-        const time = player.currentTime;
+    // Shared visual update function
+    function updateVisuals(idx) {
+        if (idx === -1) return;
         
-        // Find which chord index we are currently at
-        const idx = chords.findIndex(c => time >= c.start && time < c.end);
-
-        if (idx !== -1 && idx !== currentIdx) {
-            currentIdx = idx;
-            updateUI(idx);
-        }
-
-        requestAnimationFrame(renderFrame);
-    }
-
-    function updateUI(activeIdx) {
-        // 1. Move the conveyor to the fixed slot position
-        // This makes the active chord sit exactly at 'left: 50%' of the stage
-        const offset = activeIdx * SLOT_WIDTH;
+        const offset = idx * SLOT_WIDTH;
         conveyor.style.transform = `translateX(-${offset}px)`;
 
-        const chordElements = document.querySelectorAll('.chord-unit');
-        chordElements.forEach((el, i) => {
-            // Position them at fixed intervals
+        document.querySelectorAll('.chord-unit').forEach((el, i) => {
             el.style.left = `${i * SLOT_WIDTH}px`;
-
-            const distance = Math.abs(i - activeIdx);
-
-            // 2. Center Logic (Plateau)
-            if (distance === 0) {
+            if (i === idx) {
                 el.style.fontSize = "4.5rem";
                 el.style.color = "#0d6efd";
                 el.style.opacity = "1";
-                el.style.textShadow = "0 0 12px rgba(13,110,253,0.2)";
+                el.style.textShadow = "0 0 12px rgba(13,110,253,0.15)";
             } else {
-                // 3. Side Logic (Dimmed and Smaller)
                 el.style.fontSize = "1.5rem";
                 el.style.color = "#555";
                 el.style.opacity = "0.3";
@@ -170,8 +129,27 @@
         });
     }
 
-    if (player && chords.length > 0) {
+    function renderFrame() {
+        if (!player || !conveyor) return;
+        const time = player.currentTime;
+        const idx = chords.findIndex(c => time >= c.start && time < c.end);
+
+        if (idx !== -1 && idx !== currentIdx) {
+            currentIdx = idx;
+            updateVisuals(idx);
+        }
         requestAnimationFrame(renderFrame);
+    }
+
+    // Initial load logic
+    if (chords.length > 0) {
+        // Highlighting the very first chord before play is clicked
+        currentIdx = 0;
+        updateVisuals(0);
+        
+        if (player) {
+            requestAnimationFrame(renderFrame);
+        }
     }
 </script>
 </body>
