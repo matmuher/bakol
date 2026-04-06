@@ -9,23 +9,49 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <style>
         /* 75% Brightness Helper Text */
-        .text-muted-75 {
-            color: #bdc3c7 !important; /* Soft Silver */
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
+        .text-75 { color: #bdc3c7 !important; }
         
         .sidebar-header {
             color: #bdc3c7 !important; 
             font-size: 0.75rem;
             font-weight: 800;
-            letter-spacing: 1.2px;
-            opacity: 0.9;
+            letter-spacing: 1.5px;
+            width: 100%;
+            text-align: center;
+        }
+
+        /* Muted Grey Buttons */
+        .btn-exit {
+            border-color: #444;
+            color: #bdc3c7;
+            font-weight: 700;
+            font-size: 0.75rem;
+            border-radius: 8px;
+        }
+        .btn-exit:hover {
+            background: #2c3034;
+            color: white;
+            border-color: #666;
+        }
+
+        .btn-remove-track {
+            color: #666 !important;
+            text-decoration: none;
+            font-size: 1.2rem;
+            transition: color 0.2s;
+        }
+        .btn-remove-track:hover {
+            color: #bdc3c7 !important;
+        }
+
+        /* Less bright action buttons */
+        #check-btn, #btn-guess {
+            color: rgba(255, 255, 255, 0.8) !important;
         }
 
         .add-track-btn {
-            border: 1px dashed #444;
-            color: var(--primary-blue);
+            border: 1px dashed #333;
+            color: #888;
             transition: all 0.2s;
             border-radius: 10px;
             text-decoration: none;
@@ -33,12 +59,10 @@
             background: transparent;
         }
         .add-track-btn:hover {
-            background: rgba(13, 110, 253, 0.05);
             border-color: var(--primary-blue);
-            color: white;
+            color: #bdc3c7;
         }
 
-        /* Stage logic: Clickable only when empty */
         .upload-trigger {
             cursor: pointer;
             width: 100%;
@@ -57,17 +81,16 @@
         <span style="font-size: 1.8rem; font-weight:700; color:white;">akol</span>
     </div>
     <div class="d-flex align-items-center">
-        <span class="me-3 text-muted-75 small">User: <strong>{{ user.username }}</strong></span>
-        <a href="{% url 'logout' %}" class="btn btn-outline-danger btn-sm fw-bold">EXIT</a>
+        <span class="me-3 text-75 small">User: <strong>{{ user.username }}</strong></span>
+        <a href="{% url 'logout' %}" class="btn btn-exit">EXIT</a>
     </div>
 </nav>
 
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-3 bg-black border-end border-secondary py-4" style="min-height: 100vh;">
-            <div class="px-3 mb-4 d-flex justify-content-between align-items-center">
-                <h6 class="text-uppercase sidebar-header mb-0">YOUR TRACKS</h6>
-                <button onclick="document.getElementById('file-input').click()" class="btn btn-sm btn-outline-primary py-0 px-2 fw-bold">+</button>
+            <div class="mb-4">
+                <h6 class="text-uppercase sidebar-header">YOUR TRACKS</h6>
             </div>
 
             <div class="list-group list-group-flush mb-4">
@@ -78,11 +101,11 @@
                     </a>
                     <form action="{% url 'delete_track' f.id %}" method="post" onsubmit="return confirm('Delete track?')">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-link text-danger p-0" style="text-decoration:none; opacity: 0.7;">&times;</button>
+                        <button type="submit" class="btn btn-link btn-remove-track p-0">&times;</button>
                     </form>
                 </div>
                 {% empty %}
-                <div class="px-3 small text-muted">No tracks found.</div>
+                <div class="px-3 small text-muted text-center">No tracks found.</div>
                 {% endfor %}
             </div>
 
@@ -95,7 +118,7 @@
 
         <div class="col-md-9 py-5 text-center">
             {% if error %}
-                <div class="alert alert-danger mx-auto mb-4" style="max-width:500px; border-radius: 12px;">{{ error }}</div>
+                <div class="alert alert-dark border-secondary mx-auto mb-4 text-75" style="max-width:500px;">{{ error }}</div>
             {% endif %}
 
             <form id="upload-form" method="post" enctype="multipart/form-data" class="mb-4">
@@ -105,7 +128,7 @@
                 <div class="chord-stage mx-auto">
                     {% if not chords %}
                         <div class="upload-trigger" onclick="document.getElementById('file-input').click()">
-                            <div class="text-muted-75">CLICK TO UPLOAD MP3</div>
+                            <div class="text-75">CLICK TO UPLOAD MP3</div>
                         </div>
                     {% else %}
                         <div id="conveyor">
@@ -128,7 +151,7 @@
                 </div>
                 
                 <div class="core-progression-container">
-                    <div class="core-label text-muted-75">CORE PROGRESSION</div>
+                    <div class="core-label text-75">CORE PROGRESSION</div>
                     <div id="core-display" class="core-values"></div>
                     <button id="check-btn" class="btn btn-primary btn-sm mt-4 d-none" onclick="checkAnswers()">
                         CHECK ANSWERS
